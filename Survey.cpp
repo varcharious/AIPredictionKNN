@@ -49,6 +49,28 @@ int convertOpinionToValue(const std::string& opinionOrAffiliation) {
     }
 }
 
+// Function to normalize the feature vector (improves accuracy of prediction)
+void normalizeFeatures(std::vector<DataPoint>& data) {
+    // Find the minimum and maximum values for each feature
+    std::vector<double> minValues(data[0].x1, std::numeric_limits<double>::max());
+    std::vector<double> maxValues(data[0].x1, std::numeric_limits<double>::min());
+
+    for (const auto& point : data) {
+        minValues[0] = std::min(minValues[0], point.x1);
+        minValues[1] = std::min(minValues[1], point.x2);
+
+        maxValues[0] = std::max(maxValues[0], point.x1);
+        maxValues[1] = std::max(maxValues[1], point.x2);
+    }
+
+    // Normalize each feature to the range [0, 1]
+    for (auto& point : data) {
+        point.x1 = (point.x1 - minValues[0]) / (maxValues[0] - minValues[0]);
+        point.x2 = (point.x2 - minValues[1]) / (maxValues[1] - minValues[1]);
+    }
+}
+
+
 // distance between two data points
 double euclideanDistance(const DataPoint& a, const DataPoint& b) {
     return sqrt(pow(a.x1 - b.x1, 2) + pow(a.x2 - b.x2, 2));
@@ -90,12 +112,15 @@ std::string kNN(const std::vector<DataPoint>& data, const DataPoint& query, int 
 int main() {
 
     // Sample data
-    std::vector<DataPoint> data;
-    data.push_back(DataPoint(5.1, 3.5, 0, 1, 2, 3, 0, 1, 2, 3, 0, "Democrat"));
-    data.push_back(DataPoint(4.9, 3.0, 1, 2, 3, 0, 1, 2, 3, 0, 1, "Republican"));
-    data.push_back(DataPoint(6.2, 3.4, 2, 3, 0, 1, 2, 3, 0, 1, 2, "Green Party"));
-    data.push_back(DataPoint(5.9, 3.0, 3, 0, 1, 2, 3, 0, 1, 2, 3, "Independent"));
+    std::vector<DataPoint> data = {
+        {5.1, 3.5, 0, 1, 2, 3, 0, 1, 2, 3, 0, "Democrat"},
+        {4.9, 3.0, 1, 2, 3, 0, 1, 2, 3, 0, 1, "Republican"},
+        {6.2, 3.4, 2, 3, 0, 1, 2, 3, 0, 1, 2, "Green Party"},
+        {5.9, 3.0, 3, 0, 1, 2, 3, 0, 1, 2, 3, "Independent"}
+    };
 
+    // Normalize features
+    normalizeFeatures(data);
 
     // Questions
     int president_opinion;
